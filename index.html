@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<title>Edu Manager — Premium Ta'lim Boshqaruv Paneli</title>
+<link rel="icon" type="" href="./img/Edu Manager - Logo.png">
+<link rel="stylesheet" href="./style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<base target="_blank">
+</head>
+<body>
+
+<div id="toastHost"></div>
+
+<!-- ================= LOGIN ================= -->
+<div class="login-container" id="loginContainer">
+  <div class="login-wrapper">
+    <div class="login-brand show">
+      <div class="brand-tag"><i class="fas fa-bolt"></i> Premium Edition 2026</div>
+      <h1>Edu <span>Manager</span></h1>
+      <p>Ta'lim markazingiz uchun professional boshqaruv paneli. Barcha ma'lumotlaringiz avtomatik saqlanadi — brauzerni yopib qaytadan ochsangiz ham hech narsa yo'qolmaydi.</p>
+      <div class="login-features">
+        <div class="login-feature"><div class="ic"><i class="fas fa-database"></i></div><div><h4>Avtomatik saqlash</h4><p>Har bir amal darhol xotiraga yoziladi</p></div></div>
+        <div class="login-feature"><div class="ic"><i class="fas fa-shield-halved"></i></div><div><h4>Xavfsiz kirish</h4><p>Admin va talaba rollari ajratilgan</p></div></div>
+        <div class="login-feature"><div class="ic"><i class="fas fa-chart-pie"></i></div><div><h4>Jonli statistika</h4><p>Baho va davomat avtomatik hisoblanadi</p></div></div>
+        <div class="login-feature"><div class="ic"><i class="fas fa-mobile-screen"></i></div><div><h4>Har qanday qurilma</h4><p>Kompyuter, planshet va telefonda ishlaydi</p></div></div>
+      </div>
+    </div>
+
+    <div class="login-box">
+      <div class="login-logo"><i class="fas fa-graduation-cap"></i></div>
+      <h2 style="text-align:center;">Edu Manager</h2>
+      <p class="subtitle">Premium Edition</p>
+      <p class="hint">Boshqaruv paneliga kirish</p>
+
+      <div class="login-error" id="loginError"><i class="fas fa-circle-exclamation"></i><span id="errorMsg"></span></div>
+
+      <form id="loginForm" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label>Email yoki foydalanuvchi nomi</label>
+          <input type="text" id="loginInput" placeholder="admin" required autocomplete="username">
+        </div>
+        <div class="form-group password-group">
+          <label>Parol</label>
+          <input type="password" id="loginPass" placeholder="••••••••" required autocomplete="current-password">
+          <button type="button" class="password-toggle" onclick="togglePassword()"><i class="fas fa-eye"></i></button>
+        </div>
+        <button type="submit" class="login-btn"><i class="fas fa-arrow-right-to-bracket"></i> KIRISH</button>
+      </form>
+
+    </div>
+  </div>
+</div>
+
+<!-- ================= DASHBOARD ================= -->
+<div class="dashboard-wrapper hidden" id="dashboardWrapper">
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon"><i class="fas fa-graduation-cap"></i></div>
+      <div><h3>Edu Manager</h3><p>Premium Edition</p></div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Bosh menu</div>
+      <div class="nav-items">
+        <button class="nav-item active" onclick="switchSection('dashboard', this)"><i class="fas fa-chart-pie"></i><span>Dashboard</span></button>
+        <button class="nav-item" onclick="switchSection('courses', this)"><i class="fas fa-book-open"></i><span>Kurslar</span><span class="count" id="navCourseCount">0</span></button>
+        <button class="nav-item" onclick="switchSection('students', this)"><i class="fas fa-users"></i><span>Talabalar</span><span class="count" id="navStudentCount">0</span></button>
+        <button class="nav-item" onclick="switchSection('instructors', this)"><i class="fas fa-chalkboard-user"></i><span>O'qituvchilar</span><span class="count" id="navInstructorCount">0</span></button>
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Hisobotlar</div>
+      <div class="nav-items">
+        <button class="nav-item" onclick="switchSection('grades', this)"><i class="fas fa-star"></i><span>Baholar</span></button>
+        <button class="nav-item" onclick="switchSection('attendance', this)"><i class="fas fa-clipboard-list"></i><span>Davomat</span></button>
+      </div>
+    </div>
+
+    <div class="nav-section" id="studentMenuSection" style="display:none;">
+      <div class="nav-label">Mening</div>
+      <div class="nav-items">
+        <button class="nav-item" onclick="switchSection('myCourses', this)"><i class="fas fa-book-reader"></i><span>Mening kurslarim</span></button>
+        <button class="nav-item" onclick="switchSection('news', this)"><i class="fas fa-newspaper"></i><span>Yangiliklar</span><span class="count" id="newsBadge">3</span></button>
+        <button class="nav-item" onclick="switchSection('lessons', this)"><i class="fas fa-chalkboard"></i><span>Darslar jadvali</span></button>
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="user-profile">
+        <div class="user-avatar" id="userAvatar">A</div>
+        <div class="user-info"><h4 id="userName">Administrator</h4><p id="userRole">Administrator</p></div>
+      </div>
+      <button class="logout-btn" onclick="handleLogout()"><i class="fas fa-arrow-right-from-bracket"></i> CHIQISH</button>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="topbar">
+      <button class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+      <div class="topbar-title">
+        <div class="ic"><i class="fas fa-chart-pie" id="pageIcon"></i></div>
+        <div><h1 id="pageTitle">Dashboard</h1><p id="pageSubtitle">Umumiy ko'rsatkichlar</p></div>
+      </div>
+      <div class="topbar-actions" id="topbarActions"></div>
+    </div>
+
+    <div class="page-content">
+
+      <!-- DASHBOARD -->
+      <section class="page-section active" id="dashboard">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-top"><div class="stat-icon"><i class="fas fa-book-open"></i></div></div>
+            <div class="stat-label">Jami kurslar</div>
+            <div class="stat-value" id="totalCourses">0</div>
+            <div class="stat-change muted" id="courseChange">—</div>
+          </div>
+          <div class="stat-card blue">
+            <div class="stat-top"><div class="stat-icon"><i class="fas fa-users"></i></div></div>
+            <div class="stat-label">Jami talabalar</div>
+            <div class="stat-value" id="totalStudents">0</div>
+            <div class="stat-change muted" id="studentChange">—</div>
+          </div>
+          <div class="stat-card green">
+            <div class="stat-top"><div class="stat-icon"><i class="fas fa-star"></i></div></div>
+            <div class="stat-label">O'rtacha baho</div>
+            <div class="stat-value" id="avgGrade">—</div>
+            <div class="stat-change muted" id="gradeCount">Baho yo'q</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-top"><div class="stat-icon"><i class="fas fa-clipboard-check"></i></div></div>
+            <div class="stat-label">Davomat</div>
+            <div class="stat-value" id="attendanceRate">—</div>
+            <div class="stat-change muted" id="attendanceCount">Ma'lumot yo'q</div>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <div class="table-header"><h3><i class="fas fa-book-open"></i> Barcha kurslar</h3></div>
+          <table>
+            <thead><tr><th>Kurs nomi</th><th>Talabalar</th><th>O'qituvchi</th><th>Narxi</th><th>Sana</th></tr></thead>
+            <tbody id="dashboardTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- COURSES -->
+      <section class="page-section" id="courses">
+        <div class="cards-grid" id="coursesGrid"></div>
+      </section>
+
+      <!-- STUDENTS -->
+      <section class="page-section" id="students">
+        <div class="table-container">
+          <div class="table-header"><h3><i class="fas fa-users"></i> Talabalar ro'yxati</h3></div>
+          <table>
+            <thead><tr><th>Ism</th><th>Email</th><th>Telefon</th><th>Kurslar</th><th>Amallar</th></tr></thead>
+            <tbody id="studentsTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- INSTRUCTORS -->
+      <section class="page-section" id="instructors">
+        <div class="cards-grid" id="instructorsGrid"></div>
+      </section>
+
+      <!-- GRADES -->
+      <section class="page-section" id="grades">
+        <div class="table-container">
+          <div class="table-header"><h3><i class="fas fa-star"></i> Baholar jadvali</h3></div>
+          <table>
+            <thead><tr><th>Talaba</th><th>Kurs</th><th>Baho</th><th>Sana</th><th>Amallar</th></tr></thead>
+            <tbody id="gradesTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ATTENDANCE -->
+      <section class="page-section" id="attendance">
+        <div class="table-container">
+          <div class="table-header"><h3><i class="fas fa-clipboard-list"></i> Davomat jadvali</h3></div>
+          <table>
+            <thead><tr><th>Talaba</th><th>Sana</th><th>Holati</th><th>Izoh</th><th>Amallar</th></tr></thead>
+            <tbody id="attendanceTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- MY COURSES (Student) -->
+      <section class="page-section" id="myCourses">
+        <div class="cards-grid" id="myCoursesGrid"></div>
+      </section>
+
+      <!-- NEWS -->
+      <section class="page-section" id="news">
+        <div class="news-grid" id="newsGrid"></div>
+      </section>
+
+      <!-- LESSONS SCHEDULE -->
+      <section class="page-section" id="lessons">
+        <div class="table-container">
+          <div class="table-header"><h3><i class="fas fa-calendar-alt"></i> Darslar jadvali</h3></div>
+          <div class="schedule-filters" id="scheduleFilters">
+            <button class="schedule-filter active" data-day="all" onclick="filterSchedule('all')">Barchasi</button>
+            <button class="schedule-filter" data-day="Dushanba" onclick="filterSchedule('Dushanba')">Du</button>
+            <button class="schedule-filter" data-day="Seshanba" onclick="filterSchedule('Seshanba')">Se</button>
+            <button class="schedule-filter" data-day="Chorshanba" onclick="filterSchedule('Chorshanba')">Ch</button>
+            <button class="schedule-filter" data-day="Payshanba" onclick="filterSchedule('Payshanba')">Pa</button>
+            <button class="schedule-filter" data-day="Juma" onclick="filterSchedule('Juma')">Ju</button>
+            <button class="schedule-filter" data-day="Shanba" onclick="filterSchedule('Shanba')">Sh</button>
+          </div>
+          <div class="schedule-grid" id="scheduleGrid"></div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<div class="save-indicator" id="saveIndicator"><span class="dot"></span> Saqlandi</div>
+
+<!-- ================= MODALS ================= -->
+
+<!-- Course Modal -->
+<div class="modal" id="courseModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="courseModalTitle"><i class="fas fa-plus-circle"></i> Yangi kurs qo'shish</h2>
+      <button type="button" class="modal-close" onclick="closeModal('courseModal')"><i class="fas fa-xmark"></i></button>
+    </div>
+    <form id="courseForm" onsubmit="saveCourse(event)" class="modal-form">
+      <input type="hidden" name="id">
+      <div class="form-group"><label><i class="fas fa-book-open"></i> Kurs nomi *</label><input type="text" name="name" required placeholder="Masalan: Frontend dasturlash"></div>
+      <div class="form-group half"><label><i class="fas fa-tag"></i> Narxi (so'm) *</label><input type="number" name="price" required placeholder="500000"></div>
+      <div class="form-group half"><label><i class="fas fa-user-tie"></i> O'qituvchi *</label><input type="text" name="instructor" required placeholder="F.I.Sh"></div>
+      <div class="form-group"><label><i class="fas fa-align-left"></i> Tavsif *</label><textarea name="description" required placeholder="Kurs haqida ma'lumot..." rows="3"></textarea></div>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" onclick="closeModal('courseModal')"><i class="fas fa-xmark"></i> Bekor</button>
+        <button type="submit" class="btn-save"><i class="fas fa-floppy-disk"></i> Saqlash</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Student Modal -->
+<div class="modal" id="studentModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="studentModalTitle"><i class="fas fa-plus-circle"></i> Yangi talaba qo'shish</h2>
+      <button type="button" class="modal-close" onclick="closeModal('studentModal')"><i class="fas fa-xmark"></i></button>
+    </div>
+    <form id="studentForm" onsubmit="saveStudent(event)" class="modal-form">
+      <input type="hidden" name="id">
+      <div class="form-group"><label><i class="fas fa-user"></i> To'liq ism *</label><input type="text" name="name" required placeholder="Talabaning to'liq ismi"></div>
+      <div class="form-group half"><label><i class="fas fa-envelope"></i> Email *</label><input type="email" name="email" required placeholder="email@example.com"></div>
+      <div class="form-group half"><label><i class="fas fa-phone"></i> Telefon *</label><input type="tel" name="phone" required placeholder="+998 XX XXX XX XX"></div>
+      <div class="form-group"><label><i class="fas fa-lock"></i> Parol *</label><input type="text" name="password" required placeholder="Kamida 6 belgi"></div>
+      <div class="form-group">
+        <label><i class="fas fa-book"></i> Kurslar</label>
+        <select name="courseIds" multiple size="4" id="studentCoursesSelect"></select>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" onclick="closeModal('studentModal')"><i class="fas fa-xmark"></i> Bekor</button>
+        <button type="submit" class="btn-save"><i class="fas fa-floppy-disk"></i> Saqlash</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Instructor Modal -->
+<div class="modal" id="instructorModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="instructorModalTitle"><i class="fas fa-plus-circle"></i> Yangi o'qituvchi qo'shish</h2>
+      <button type="button" class="modal-close" onclick="closeModal('instructorModal')"><i class="fas fa-xmark"></i></button>
+    </div>
+    <form id="instructorForm" onsubmit="saveInstructor(event)" class="modal-form">
+      <input type="hidden" name="id">
+      <div class="form-group half"><label><i class="fas fa-user"></i> Ism *</label><input type="text" name="name" required placeholder="F.I.Sh"></div>
+      <div class="form-group half"><label><i class="fas fa-tag"></i> Yo'nalish *</label><input type="text" name="subject" required placeholder="Masalan: FRONTEND"></div>
+      <div class="form-group half"><label><i class="fas fa-briefcase"></i> Tajriba *</label><input type="text" name="experience" required placeholder="2 yillik tajriba"></div>
+      <div class="form-group"><label><i class="fas fa-align-left"></i> Bio *</label><textarea name="bio" required rows="3" placeholder="Qisqacha ma'lumot"></textarea></div>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" onclick="closeModal('instructorModal')"><i class="fas fa-xmark"></i> Bekor</button>
+        <button type="submit" class="btn-save"><i class="fas fa-floppy-disk"></i> Saqlash</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Grade Modal -->
+<div class="modal" id="gradeModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2><i class="fas fa-plus-circle"></i> Baho qo'shish</h2>
+      <button type="button" class="modal-close" onclick="closeModal('gradeModal')"><i class="fas fa-xmark"></i></button>
+    </div>
+    <form id="gradeForm" onsubmit="saveGrade(event)" class="modal-form">
+      <div class="form-group"><label><i class="fas fa-user"></i> Talaba *</label><select name="studentId" id="gradeStudentSelect" required></select></div>
+      <div class="form-group"><label><i class="fas fa-book"></i> Kurs *</label><select name="courseId" id="gradeCourseSelect" required></select></div>
+      <div class="form-group"><label><i class="fas fa-star"></i> Baho (0-100) *</label><input type="number" name="score" min="0" max="100" required placeholder="85"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" onclick="closeModal('gradeModal')"><i class="fas fa-xmark"></i> Bekor</button>
+        <button type="submit" class="btn-save"><i class="fas fa-floppy-disk"></i> Saqlash</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Attendance Modal -->
+<div class="modal" id="attendanceModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2><i class="fas fa-plus-circle"></i> Davomat belgilash</h2>
+      <button type="button" class="modal-close" onclick="closeModal('attendanceModal')"><i class="fas fa-xmark"></i></button>
+    </div>
+    <form id="attendanceForm" onsubmit="saveAttendance(event)" class="modal-form">
+      <div class="form-group"><label><i class="fas fa-user"></i> Talaba *</label><select name="studentId" id="attendanceStudentSelect" required></select></div>
+      <div class="form-group half"><label><i class="fas fa-calendar"></i> Sana *</label><input type="date" name="date" required></div>
+      <div class="form-group half">
+        <label><i class="fas fa-clipboard-check"></i> Holati *</label>
+        <select name="status" required>
+          <option value="Keldi">Keldi</option>
+          <option value="Kelmadi">Kelmadi</option>
+          <option value="Kechikdi">Kechikdi</option>
+        </select>
+      </div>
+      <div class="form-group"><label><i class="fas fa-comment"></i> Izoh</label><input type="text" name="note" placeholder="Ixtiyoriy izoh"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" onclick="closeModal('attendanceModal')"><i class="fas fa-xmark"></i> Bekor</button>
+        <button type="submit" class="btn-save"><i class="fas fa-floppy-disk"></i> Saqlash</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Enroll Modal -->
+<div class="modal" id="enrollModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2><i class="fas fa-user-plus"></i> Kursga yozilish</h2>
+      <button type="button" class="modal-close" onclick="closeModal('enrollModal')"><i class="fas fa-xmark"></i></button>
+    </div>
+    <form id="enrollForm" onsubmit="saveEnrollment(event)" class="modal-form">
+      <input type="hidden" name="courseId" id="enrollCourseId">
+      <div class="form-group"><label><i class="fas fa-book-open"></i> Kurs</label><input type="text" id="enrollCourseName" readonly style="background:#f5f5f5;"></div>
+      <div class="form-group"><label><i class="fas fa-user"></i> Talaba</label><input type="text" id="enrollStudentName" readonly style="background:#f5f5f5;"></div>
+      <div class="form-group half"><label><i class="fas fa-calendar"></i> Boshlanish sanasi *</label><input type="date" name="startDate" required></div>
+      <div class="form-group half"><label><i class="fas fa-money-bill"></i> To'lov turi *</label>
+        <select name="paymentType" required>
+          <option value="Naqd">Naqd pul</option>
+          <option value="Karta">Bank kartasi</option>
+          <option value="Click">Click</option>
+          <option value="Payme">Payme</option>
+        </select>
+      </div>
+      <div class="form-group"><label><i class="fas fa-comment"></i> Izoh</label><textarea name="note" rows="2" placeholder="Ixtiyoriy izoh..."></textarea></div>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" onclick="closeModal('enrollModal')"><i class="fas fa-xmark"></i> Bekor</button>
+        <button type="submit" class="btn-save"><i class="fas fa-check"></i> Yozilish</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- News Modal -->
+<div class="modal" id="newsModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="newsModalTitle"><i class="fas fa-plus-circle"></i> Yangilik qo'shish</h2>
+      <button type="button" class="modal-close" onclick="closeModal('newsModal')"><i class="fas fa-xmark"></i></button>
+    </div>
+    <form id="newsForm" onsubmit="saveNews(event)" class="modal-form">
+      <input type="hidden" name="id">
+      <div class="form-group"><label><i class="fas fa-heading"></i> Sarlavha *</label><input type="text" name="title" required placeholder="Yangilik sarlavhasi"></div>
+      <div class="form-group half"><label><i class="fas fa-tag"></i> Kategoriya *</label>
+        <select name="category" required>
+          <option value="Umumiy">Umumiy</option>
+          <option value="Kurs">Kurs yangiliklari</option>
+          <option value="Tadbir">Tadbirlar</option>
+          <option value="E'lon">E'lonlar</option>
+        </select>
+      </div>
+      <div class="form-group half"><label><i class="fas fa-calendar"></i> Sana</label><input type="date" name="date" id="newsDate"></div>
+      <div class="form-group"><label><i class="fas fa-align-left"></i> Matn *</label><textarea name="content" required rows="4" placeholder="Yangilik matni..."></textarea></div>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" onclick="closeModal('newsModal')"><i class="fas fa-xmark"></i> Bekor</button>
+        <button type="submit" class="btn-save"><i class="fas fa-floppy-disk"></i> Saqlash</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Lesson Modal -->
+<div class="modal" id="lessonModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="lessonModalTitle"><i class="fas fa-plus-circle"></i> Dars qo'shish</h2>
+      <button type="button" class="modal-close" onclick="closeModal('lessonModal')"><i class="fas fa-xmark"></i></button>
+    </div>
+    <form id="lessonForm" onsubmit="saveLesson(event)" class="modal-form">
+      <input type="hidden" name="id">
+      <div class="form-group"><label><i class="fas fa-book-open"></i> Kurs *</label><select name="courseId" id="lessonCourseSelect" required></select></div>
+      <div class="form-group half"><label><i class="fas fa-calendar-day"></i> Hafta kuni *</label>
+        <select name="day" required>
+          <option value="Dushanba">Dushanba</option>
+          <option value="Seshanba">Seshanba</option>
+          <option value="Chorshanba">Chorshanba</option>
+          <option value="Payshanba">Payshanba</option>
+          <option value="Juma">Juma</option>
+          <option value="Shanba">Shanba</option>
+        </select>
+      </div>
+      <div class="form-group half"><label><i class="fas fa-clock"></i> Vaqt *</label><input type="time" name="time" required></div>
+      <div class="form-group"><label><i class="fas fa-door-open"></i> Xona</label><input type="text" name="room" placeholder="Masalan: 301-xona"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" onclick="closeModal('lessonModal')"><i class="fas fa-xmark"></i> Bekor</button>
+        <button type="submit" class="btn-save"><i class="fas fa-floppy-disk"></i> Saqlash</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Confirm Modal -->
+<div class="modal confirm-modal" id="confirmModal">
+  <div class="modal-content">
+    <div class="warn-icon"><i class="fas fa-triangle-exclamation"></i></div>
+    <h3 id="confirmTitle">Ishonchingiz komilmi?</h3>
+    <p id="confirmText">Bu amalni qaytarib bo'lmaydi.</p>
+    <div class="confirm-actions">
+      <button class="cancel" onclick="closeConfirm()">Bekor qilish</button>
+      <button class="confirm" id="confirmActionBtn">O'chirish</button>
+    </div>
+  </div>
+</div>
+
+<!-- Overlay for mobile sidebar -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+<script src="./script.js"></script>
+
+</body>
+</html>

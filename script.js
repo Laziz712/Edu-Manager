@@ -1,3 +1,11 @@
+const CONFIG = {
+  GOOGLE_CLIENT_ID: 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com',
+
+  TELEGRAM_BOT_TOKEN: '8769055476:AAFwA_ESwYIxH3Y8_zpgjNhtZnjgoM5LPcc',
+
+  TELEGRAM_CHAT_ID: '8584049635',
+};
+
 const STORAGE_KEY = 'dataTalimAdminState_v2';
 
 const admin = { email:'admin', password:'admin123', name:'Administrator', role:'Administrator' };
@@ -82,7 +90,6 @@ function flashSaveIndicator(){
   flashSaveIndicator._t = setTimeout(()=> el.classList.remove('show'), 1400);
 }
 
-/* ================= TOASTS ================= */
 function showToast(msg, type='info', icon){
   const host = document.getElementById('toastHost');
   const t = document.createElement('div');
@@ -96,7 +103,6 @@ function showToast(msg, type='info', icon){
   }, 2800);
 }
 
-/* ================= CONFIRM MODAL ================= */
 let pendingConfirmAction = null;
 function askConfirm(title, text, onConfirm){
   document.getElementById('confirmTitle').textContent = title;
@@ -113,9 +119,22 @@ document.addEventListener('DOMContentLoaded', ()=>{
     if(pendingConfirmAction) pendingConfirmAction();
     closeConfirm();
   });
+
+  const googleConfigured = CONFIG.GOOGLE_CLIENT_ID && !CONFIG.GOOGLE_CLIENT_ID.startsWith('YOUR_');
+  if(!googleConfigured){
+    initGoogleSignIn();
+    return;
+  }
+
+  const tryInitGoogle = setInterval(()=>{
+    if(typeof google !== 'undefined' && google.accounts){
+      initGoogleSignIn();
+      clearInterval(tryInitGoogle);
+    }
+  }, 200);
+  setTimeout(()=> clearInterval(tryInitGoogle), 5000);
 });
 
-/* ================= MOBILE SIDEBAR ================= */
 function toggleSidebar(){
   const sidebar = document.getElementById('sidebar');
   const overlay = document.getElementById('sidebarOverlay');
@@ -129,10 +148,9 @@ function toggleSidebar(){
   }
 }
 
-/* ================= LOGIN ================= */
-function togglePassword(){
-  const passInput = document.getElementById('loginPass');
-  const icon = event.target.closest('button').querySelector('i');
+function togglePassword(btn){
+  const passInput = btn.closest('.password-group').querySelector('input');
+  const icon = btn.querySelector('i');
   if(passInput.type === 'password'){
     passInput.type = 'text'; icon.classList.replace('fa-eye','fa-eye-slash');
   }else{
@@ -160,6 +178,177 @@ function handleLogin(e){
   document.getElementById('errorMsg').textContent = 'Email yoki parol noto\'g\'ri!';
   errorEl.classList.add('show');
   setTimeout(()=> errorEl.classList.remove('show'), 4000);
+}
+
+function switchLoginTab(tab){
+  document.getElementById('tabLoginBtn').classList.toggle('active', tab==='login');
+  document.getElementById('tabRegisterBtn').classList.toggle('active', tab==='register');
+  document.getElementById('loginTab').classList.toggle('hidden', tab!=='login');
+  document.getElementById('registerTab').classList.toggle('hidden', tab!=='register');
+}
+
+function handleRegister(e){
+  e.preventDefault();
+  const name = document.getElementById('regName').value.trim();
+  const email = document.getElementById('regEmail').value.trim().toLowerCase();
+  const phone = document.getElementById('regPhone').value.trim();
+  const password = document.getElementById('regPass').value;
+
+  const errorEl = document.getElementById('registerError');
+  const showRegError = (msg) => {
+    document.getElementById('registerErrorMsg').textContent = msg;
+    errorEl.classList.add('show');
+    setTimeout(()=> errorEl.classList.remove('show'), 4000);
+  };
+
+  if(email === admin.email || state.students.some(s => s.email === email)){
+    showRegError("Bu email bilan hisob allaqachon mavjud. Kirish bo'limidan foydalaning.");
+    return;
+  }
+
+  const newStudent = {
+    id: state.ids.student++,
+    name,
+    email,
+    phone,
+    password,
+    courseIds: [],
+    joinedAt: todayFormatted(),
+    registeredVia: 'email',
+  };
+  state.students.push(newStudent);
+  persist();
+
+  notifyTelegramNewUser(newStudent);
+
+  currentUser = { ...newStudent, role:'Talaba' };
+  showDashboard();
+  showToast("Ro'yxatdan muvaffaqiyatli o'tdingiz!", 'ok');
+}
+
+function initGoogleSignIn(){
+  const googleConfigured = CONFIG.GOOGLE_CLIENT_ID && !CONFIG.GOOGLE_CLIENT_ID.startsWith('YOUR_');
+
+  if(!googleConfigured){
+    document.querySelectorAll('.google-btn-wrap, .or-divider').forEach(el => el.classList.add('hidden'));
+    console.warn('Google Sign-In ishlashi uchun CONFIG.GOOGLE_CLIENT_ID ni to\'ldiring.');
+    return;
+  }
+
+  if(typeof google === 'undefined' || !google.accounts) return;
+
+  google.accounts.id.initialize({
+    client_id: CONFIG.GOOGLE_CLIENT_ID,
+    callback: handleGoogleCredentialResponse,
+  });
+  ['googleSignInLogin','googleSignInRegister'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) google.accounts.id.renderButton(el, { theme:'outline', size:'large', width:280, text:'continue_with' });
+  });
+}
+
+function decodeJwt(token){
+  try{
+    const payload = token.split('.')[1];
+    return JSON.parse(decodeURIComponent(escape(atob(payload.replace(/-/g,'+').replace(/_/g,'/')))));
+  }catch(e){
+    console.error('JWT decode error', e);
+    return null;
+  }
+}
+
+function handleGoogleCredentialResponse(response){
+  const profile = decodeJwt(response.credential);
+  if(!profile || !profile.email){
+    showToast('Google orqali kirishda xatolik yuz berdi.', 'bad');
+    return;
+  }
+
+  if(profile.email === admin.email){
+    currentUser = { ...admin };
+    showDashboard();
+    return;
+  }
+
+  let student = state.students.find(s => s.email === profile.email);
+  if(!student){
+    student = {
+      id: state.ids.student++,
+      name: profile.name || profile.email.split('@')[0],
+      email: profile.email,
+      phone: '',
+      password: null,
+      courseIds: [],
+      joinedAt: todayFormatted(),
+      registeredVia: 'google',
+    };
+    state.students.push(student);
+    persist();
+    notifyTelegramNewUser(student);
+    showToast("Google orqali ro'yxatdan o'tdingiz!", 'ok');
+  }
+
+  currentUser = { ...student, role:'Talaba' };
+  showDashboard();
+}
+
+async function sendTelegramMessage(text){
+  const { TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID } = CONFIG;
+  if(!TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN.startsWith('YOUR_')) return;
+  if(!TELEGRAM_CHAT_ID || String(TELEGRAM_CHAT_ID).startsWith('YOUR_')) return;
+
+  try{
+    await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text, parse_mode: 'Markdown' }),
+    });
+  }catch(e){
+    console.error('Telegram notify error', e);
+  }
+}
+
+function notifyTelegramNewUser(user){
+  const text =
+    `🆕 *Yangi foydalanuvchi ro'yxatdan o'tdi!*\n\n` +
+    `👤 Ism: ${user.name}\n` +
+    `📧 Email: ${user.email}\n` +
+    (user.phone ? `📞 Telefon: ${user.phone}\n` : '') +
+    `🔑 Usul: ${user.registeredVia === 'google' ? 'Google orqali' : 'Email/parol orqali'}\n` +
+    `🕒 Vaqt: ${new Date().toLocaleString('uz-UZ')}`;
+  sendTelegramMessage(text);
+}
+
+function notifyTelegramNewEnrollment(student, course){
+  const text =
+    `📝 *Yangi kursga yozilish!*\n\n` +
+    `👤 Talaba: ${student ? student.name : "Noma'lum"}\n` +
+    `📚 Kurs: ${course ? course.name : "Noma'lum"}\n` +
+    `🕒 Vaqt: ${new Date().toLocaleString('uz-UZ')}`;
+  sendTelegramMessage(text);
+}
+
+function notifyTelegramCourseDeleted(course){
+  const text =
+    `🗑 *Kurs o'chirildi*\n\n` +
+    `📚 Kurs: ${course.name}\n` +
+    `🕒 Vaqt: ${new Date().toLocaleString('uz-UZ')}`;
+  sendTelegramMessage(text);
+}
+
+function notifyTelegramNewTeacher(teacher){
+  const text =
+    `👨‍🏫 *Yangi o'qituvchi qo'shildi!*\n\n` +
+    `👤 Ism: ${teacher.name}\n` +
+    `🧭 Yo'nalish: ${teacher.subject || '—'}\n` +
+    `📈 Tajriba: ${teacher.experience || '—'}\n` +
+    `🕒 Vaqt: ${new Date().toLocaleString('uz-UZ')}`;
+  sendTelegramMessage(text);
+}
+
+function todayFormatted(){
+  const d = new Date();
+  return String(d.getDate()).padStart(2,'0') + '.' + String(d.getMonth()+1).padStart(2,'0') + '.' + d.getFullYear();
 }
 
 function showDashboard(){
@@ -195,7 +384,6 @@ function handleLogout(){
   document.getElementById('confirmActionBtn').textContent = 'Chiqish';
 }
 
-/* ================= NAV ================= */
 function switchSection(section, btn){
   document.querySelectorAll('.page-section').forEach(s=>s.classList.remove('active'));
   document.getElementById(section).classList.add('active');
@@ -265,7 +453,6 @@ function updateTopbar(section){
   }
 }
 
-/* ================= MODALS ================= */
 function openModal(id){ document.getElementById(id).classList.add('show'); }
 function closeModal(id){
   document.getElementById(id).classList.remove('show');
@@ -276,7 +463,6 @@ function closeModal(id){
   if(f) f.reset();
 }
 
-/* ---- Course modal ---- */
 function openCourseModal(course){
   editing.course = course ? course.id : null;
   const title = course
@@ -321,11 +507,11 @@ function deleteCourse(id){
     persist();
     renderAll();
     showToast('Kurs o\'chirildi', 'bad');
+    notifyTelegramCourseDeleted(course);
   });
   document.getElementById('confirmActionBtn').textContent = 'O\'chirish';
 }
 
-/* ---- Student modal ---- */
 function fillCourseSelectMultiple(selected){
   const sel = document.getElementById('studentCoursesSelect');
   sel.innerHTML = state.courses.map(c=>'<option value="' + c.id + '"' + (selected && selected.includes(c.id)?' selected':'') + '>' + c.name + '</option>').join('');
@@ -379,7 +565,6 @@ function deleteStudent(id){
   document.getElementById('confirmActionBtn').textContent = 'O\'chirish';
 }
 
-/* ---- Instructor modal ---- */
 function openInstructorModal(ins){
   editing.instructor = ins ? ins.id : null;
   const title = ins
@@ -402,8 +587,10 @@ function saveInstructor(e){
     Object.assign(ins, { name:f.name.value, subject:f.subject.value, experience:f.experience.value, bio:f.bio.value });
     showToast('O\'qituvchi ma\'lumotlari yangilandi', 'ok');
   } else {
-    state.instructors.push({ id: state.ids.instructor++, name:f.name.value, subject:f.subject.value, experience:f.experience.value, bio:f.bio.value });
+    const newInstructor = { id: state.ids.instructor++, name:f.name.value, subject:f.subject.value, experience:f.experience.value, bio:f.bio.value };
+    state.instructors.push(newInstructor);
     showToast('Yangi o\'qituvchi qo\'shildi', 'ok');
+    notifyTelegramNewTeacher(newInstructor);
   }
   editing.instructor = null;
   persist();
@@ -421,7 +608,6 @@ function deleteInstructor(id){
   document.getElementById('confirmActionBtn').textContent = 'O\'chirish';
 }
 
-/* ---- Grade modal ---- */
 function openGradeModal(){
   const sSel = document.getElementById('gradeStudentSelect');
   const cSel = document.getElementById('gradeCourseSelect');
@@ -452,7 +638,6 @@ function deleteGrade(id){
   document.getElementById('confirmActionBtn').textContent = 'O\'chirish';
 }
 
-/* ---- Attendance modal ---- */
 function openAttendanceModal(){
   const sSel = document.getElementById('attendanceStudentSelect');
   sSel.innerHTML = state.students.map(s=>'<option value="' + s.id + '">' + s.name + '</option>').join('') || '<option value="">Talaba yo\'q</option>';
@@ -484,7 +669,6 @@ function deleteAttendance(id){
   document.getElementById('confirmActionBtn').textContent = 'O\'chirish';
 }
 
-/* ---- Enroll modal ---- */
 function openEnrollModal(courseId){
   const course = state.courses.find(c=>c.id===courseId);
   if(!course) return;
@@ -528,9 +712,9 @@ function saveEnrollment(e){
   closeModal('enrollModal');
   renderAll();
   showToast('Kursga muvaffaqiyatli yozildingiz!', 'ok');
+  notifyTelegramNewEnrollment(student, state.courses.find(c=>c.id===courseId));
 }
 
-/* ---- News modal ---- */
 function openNewsModal(news){
   editing.news = news ? news.id : null;
   const title = news
@@ -580,7 +764,6 @@ function deleteNews(id){
   document.getElementById('confirmActionBtn').textContent = 'O\'chirish';
 }
 
-/* ---- Lesson modal ---- */
 function openLessonModal(lesson){
   editing.lesson = lesson ? lesson.id : null;
   const title = lesson
@@ -628,7 +811,6 @@ function deleteLesson(id){
   document.getElementById('confirmActionBtn').textContent = 'O\'chirish';
 }
 
-/* ================= RENDER HELPERS ================= */
 function studentName(id){ const s = state.students.find(s=>s.id===id); return s ? s.name : 'Noma\'lum'; }
 function courseName(id){ const c = state.courses.find(c=>c.id===id); return c ? c.name : 'Noma\'lum'; }
 function courseStudentCount(courseId){ return state.students.filter(s=>s.courseIds.includes(courseId)).length; }
@@ -636,7 +818,6 @@ function fmtPrice(v){ return Number(v).toLocaleString('uz-UZ'); }
 function gradeBadgeClass(score){ return score>=80?'grade-a':score>=60?'grade-b':'grade-c'; }
 function attendanceBadgeClass(status){ return status==='Keldi'?'ok':status==='Kechikdi'?'warn':'bad'; }
 
-/* ================= RENDER ================= */
 function renderAll(){
   document.getElementById('totalCourses').textContent = state.courses.length;
   document.getElementById('totalStudents').textContent = state.students.length;
@@ -802,7 +983,6 @@ function renderAttendance(){
   ).join('');
 }
 
-/* ---- My Courses (Student) ---- */
 function renderMyCourses(){
   const grid = document.getElementById('myCoursesGrid');
   if(!currentUser || currentUser.role !== 'Talaba') return;
@@ -835,7 +1015,6 @@ function renderMyCourses(){
   ).join('');
 }
 
-/* ---- News ---- */
 function renderNews(){
   const grid = document.getElementById('newsGrid');
   const isAdmin = currentUser.role === 'Administrator';
@@ -857,7 +1036,6 @@ function renderNews(){
   }).join('');
 }
 
-/* ---- Schedule ---- */
 let currentScheduleFilter = 'all';
 function filterSchedule(day){
   currentScheduleFilter = day;
@@ -901,7 +1079,6 @@ function renderSchedule(){
   }).join('');
 }
 
-/* ================= INIT ================= */
 window.addEventListener('load', () => {
   loadState();
 });

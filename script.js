@@ -1,9 +1,14 @@
+/* =======================================================================
+   SOZLAMALAR — shu yerga o'zingizning ma'lumotlaringizni kiriting
+   ======================================================================= */
 const CONFIG = {
+  // Google Cloud Console > APIs & Services > Credentials dan olingan OAuth Client ID
+  // https://console.cloud.google.com/apis/credentials
   GOOGLE_CLIENT_ID: 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com',
 
-  TELEGRAM_BOT_TOKEN: '8769055476:AAFwA_ESwYIxH3Y8_zpgjNhtZnjgoM5LPcc',
-
-  TELEGRAM_CHAT_ID: '8584049635',
+  // Telegram bot tokeni va chat ID endi bu yerda emas — server.js ichidagi
+  // .env faylida (TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID) sozlanadi. Bu xavfsizroq,
+  // chunki tokeningiz brauzer kodida ochiq ko'rinmaydi.
 };
 
 const STORAGE_KEY = 'dataTalimAdminState_v2';
@@ -90,6 +95,7 @@ function flashSaveIndicator(){
   flashSaveIndicator._t = setTimeout(()=> el.classList.remove('show'), 1400);
 }
 
+/* ================= TOASTS ================= */
 function showToast(msg, type='info', icon){
   const host = document.getElementById('toastHost');
   const t = document.createElement('div');
@@ -103,6 +109,7 @@ function showToast(msg, type='info', icon){
   }, 2800);
 }
 
+/* ================= CONFIRM MODAL ================= */
 let pendingConfirmAction = null;
 function askConfirm(title, text, onConfirm){
   document.getElementById('confirmTitle').textContent = title;
@@ -122,10 +129,12 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
   const googleConfigured = CONFIG.GOOGLE_CLIENT_ID && !CONFIG.GOOGLE_CLIENT_ID.startsWith('YOUR_');
   if(!googleConfigured){
+    // Sozlanmagan bo'lsa, Google skripti yuklanishini kutmasdan darhol yashiramiz
     initGoogleSignIn();
     return;
   }
 
+  // Google Identity Services skripti yuklanishi biroz vaqt olishi mumkin
   const tryInitGoogle = setInterval(()=>{
     if(typeof google !== 'undefined' && google.accounts){
       initGoogleSignIn();
@@ -135,6 +144,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
   setTimeout(()=> clearInterval(tryInitGoogle), 5000);
 });
 
+/* ================= MOBILE SIDEBAR ================= */
 function toggleSidebar(){
   const sidebar = document.getElementById('sidebar');
   const overlay = document.getElementById('sidebarOverlay');
@@ -148,6 +158,7 @@ function toggleSidebar(){
   }
 }
 
+/* ================= LOGIN ================= */
 function togglePassword(icon){
   const passInput = icon.closest('.input-group').querySelector('input');
   if(passInput.type === 'password'){
@@ -184,6 +195,7 @@ function handleLogin(e){
   setTimeout(()=> errorEl.classList.remove('show'), 4000);
 }
 
+/* ================= TABS: KIRISH / RO'YXATDAN O'TISH ================= */
 function switchLoginTab(tab){
   document.getElementById('tabLoginBtn').classList.toggle('active', tab==='login');
   document.getElementById('tabRegisterBtn').classList.toggle('active', tab==='register');
@@ -191,6 +203,7 @@ function switchLoginTab(tab){
   document.getElementById('registerTab').classList.toggle('hidden', tab!=='register');
 }
 
+/* ================= RO'YXATDAN O'TISH (email/parol) ================= */
 function handleRegister(e){
   e.preventDefault();
   const name = document.getElementById('regName').value.trim();
@@ -230,10 +243,12 @@ function handleRegister(e){
   showToast("Ro'yxatdan muvaffaqiyatli o'tdingiz!", 'ok');
 }
 
+/* ================= GOOGLE ORQALI KIRISH ================= */
 function initGoogleSignIn(){
   const googleConfigured = CONFIG.GOOGLE_CLIENT_ID && !CONFIG.GOOGLE_CLIENT_ID.startsWith('YOUR_');
 
   if(!googleConfigured){
+    // Google sozlanmagan — tugma va "yoki" chizig'ini yashirib, formani tekis qilib qo'yamiz
     document.querySelectorAll('.google-btn-wrap, .or-divider').forEach(el => el.classList.add('hidden'));
     console.warn('Google Sign-In ishlashi uchun CONFIG.GOOGLE_CLIENT_ID ni to\'ldiring.');
     return;
@@ -281,7 +296,7 @@ function handleGoogleCredentialResponse(response){
       name: profile.name || profile.email.split('@')[0],
       email: profile.email,
       phone: '',
-      password: null,
+      password: null, // Google orqali ro'yxatdan o'tgan, parol yo'q
       courseIds: [],
       joinedAt: todayFormatted(),
       registeredVia: 'google',
@@ -296,31 +311,39 @@ function handleGoogleCredentialResponse(response){
   showDashboard();
 }
 
+/* ================= TELEGRAM BOTGA XABAR YUBORISH (umumiy) ================= */
 async function sendTelegramMessage(text){
-  const { TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID } = CONFIG;
-  if(!TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN.startsWith('YOUR_')) return;
-  if(!TELEGRAM_CHAT_ID || String(TELEGRAM_CHAT_ID).startsWith('YOUR_')) return;
-
+  // Endi to'g'ridan-to'g'ri Telegram'ga emas, o'z serverimizga (server.js) yuboramiz —
+  // u yerda bot tokeni xavfsiz saqlanadi va serverdan Telegram'ga yuboriladi.
   try{
-    await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+    await fetch('/api/notify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text, parse_mode: 'Markdown' }),
+      body: JSON.stringify({ text }),
     });
   }catch(e){
     console.error('Telegram notify error', e);
   }
 }
 
-function notifyTelegramNewUser(user){
-  const text =
-    `🆕 *Yangi foydalanuvchi ro'yxatdan o'tdi!*\n\n` +
-    `👤 Ism: ${user.name}\n` +
-    `📧 Email: ${user.email}\n` +
-    (user.phone ? `📞 Telefon: ${user.phone}\n` : '') +
-    `🔑 Usul: ${user.registeredVia === 'google' ? 'Google orqali' : 'Email/parol orqali'}\n` +
-    `🕒 Vaqt: ${new Date().toLocaleString('uz-UZ')}`;
-  sendTelegramMessage(text);
+async function notifyTelegramNewUser(user){
+  // users.json'ga yozish + Telegram xabari — hammasi backendda (server.js) amalga oshadi
+  try{
+    const res = await fetch('/api/register-user', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: user.name,
+        email: user.email,
+        phone: user.phone || '',
+        registeredVia: user.registeredVia || 'email',
+      }),
+    });
+    return await res.json();
+  }catch(e){
+    console.error('register-user error', e);
+    return null;
+  }
 }
 
 function notifyTelegramNewEnrollment(student, course){
@@ -388,6 +411,7 @@ function handleLogout(){
   document.getElementById('confirmActionBtn').textContent = 'Chiqish';
 }
 
+/* ================= NAV ================= */
 function switchSection(section, btn){
   document.querySelectorAll('.page-section').forEach(s=>s.classList.remove('active'));
   document.getElementById(section).classList.add('active');
@@ -457,6 +481,7 @@ function updateTopbar(section){
   }
 }
 
+/* ================= MODALS ================= */
 function openModal(id){ document.getElementById(id).classList.add('show'); }
 function closeModal(id){
   document.getElementById(id).classList.remove('show');
@@ -467,6 +492,7 @@ function closeModal(id){
   if(f) f.reset();
 }
 
+/* ---- Course modal ---- */
 function openCourseModal(course){
   editing.course = course ? course.id : null;
   const title = course
@@ -516,6 +542,7 @@ function deleteCourse(id){
   document.getElementById('confirmActionBtn').textContent = 'O\'chirish';
 }
 
+/* ---- Student modal ---- */
 function fillCourseSelectMultiple(selected){
   const sel = document.getElementById('studentCoursesSelect');
   sel.innerHTML = state.courses.map(c=>'<option value="' + c.id + '"' + (selected && selected.includes(c.id)?' selected':'') + '>' + c.name + '</option>').join('');
@@ -569,6 +596,7 @@ function deleteStudent(id){
   document.getElementById('confirmActionBtn').textContent = 'O\'chirish';
 }
 
+/* ---- Instructor modal ---- */
 function openInstructorModal(ins){
   editing.instructor = ins ? ins.id : null;
   const title = ins
@@ -612,6 +640,7 @@ function deleteInstructor(id){
   document.getElementById('confirmActionBtn').textContent = 'O\'chirish';
 }
 
+/* ---- Grade modal ---- */
 function openGradeModal(){
   const sSel = document.getElementById('gradeStudentSelect');
   const cSel = document.getElementById('gradeCourseSelect');
@@ -642,6 +671,7 @@ function deleteGrade(id){
   document.getElementById('confirmActionBtn').textContent = 'O\'chirish';
 }
 
+/* ---- Attendance modal ---- */
 function openAttendanceModal(){
   const sSel = document.getElementById('attendanceStudentSelect');
   sSel.innerHTML = state.students.map(s=>'<option value="' + s.id + '">' + s.name + '</option>').join('') || '<option value="">Talaba yo\'q</option>';
@@ -673,6 +703,7 @@ function deleteAttendance(id){
   document.getElementById('confirmActionBtn').textContent = 'O\'chirish';
 }
 
+/* ---- Enroll modal ---- */
 function openEnrollModal(courseId){
   const course = state.courses.find(c=>c.id===courseId);
   if(!course) return;
@@ -719,6 +750,7 @@ function saveEnrollment(e){
   notifyTelegramNewEnrollment(student, state.courses.find(c=>c.id===courseId));
 }
 
+/* ---- News modal ---- */
 function openNewsModal(news){
   editing.news = news ? news.id : null;
   const title = news
@@ -768,6 +800,7 @@ function deleteNews(id){
   document.getElementById('confirmActionBtn').textContent = 'O\'chirish';
 }
 
+/* ---- Lesson modal ---- */
 function openLessonModal(lesson){
   editing.lesson = lesson ? lesson.id : null;
   const title = lesson
@@ -815,6 +848,7 @@ function deleteLesson(id){
   document.getElementById('confirmActionBtn').textContent = 'O\'chirish';
 }
 
+/* ================= RENDER HELPERS ================= */
 function studentName(id){ const s = state.students.find(s=>s.id===id); return s ? s.name : 'Noma\'lum'; }
 function courseName(id){ const c = state.courses.find(c=>c.id===id); return c ? c.name : 'Noma\'lum'; }
 function courseStudentCount(courseId){ return state.students.filter(s=>s.courseIds.includes(courseId)).length; }
@@ -822,6 +856,7 @@ function fmtPrice(v){ return Number(v).toLocaleString('uz-UZ'); }
 function gradeBadgeClass(score){ return score>=80?'grade-a':score>=60?'grade-b':'grade-c'; }
 function attendanceBadgeClass(status){ return status==='Keldi'?'ok':status==='Kechikdi'?'warn':'bad'; }
 
+/* ================= RENDER ================= */
 function renderAll(){
   document.getElementById('totalCourses').textContent = state.courses.length;
   document.getElementById('totalStudents').textContent = state.students.length;
@@ -987,6 +1022,7 @@ function renderAttendance(){
   ).join('');
 }
 
+/* ---- My Courses (Student) ---- */
 function renderMyCourses(){
   const grid = document.getElementById('myCoursesGrid');
   if(!currentUser || currentUser.role !== 'Talaba') return;
@@ -1019,6 +1055,7 @@ function renderMyCourses(){
   ).join('');
 }
 
+/* ---- News ---- */
 function renderNews(){
   const grid = document.getElementById('newsGrid');
   const isAdmin = currentUser.role === 'Administrator';
@@ -1040,6 +1077,7 @@ function renderNews(){
   }).join('');
 }
 
+/* ---- Schedule ---- */
 let currentScheduleFilter = 'all';
 function filterSchedule(day){
   currentScheduleFilter = day;
@@ -1083,6 +1121,7 @@ function renderSchedule(){
   }).join('');
 }
 
+/* ================= INIT ================= */
 window.addEventListener('load', () => {
   loadState();
 });

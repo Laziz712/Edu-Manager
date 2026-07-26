@@ -148,14 +148,18 @@ function toggleSidebar(){
   }
 }
 
-function togglePassword(btn){
-  const passInput = btn.closest('.password-group').querySelector('input');
-  const icon = btn.querySelector('i');
+function togglePassword(icon){
+  const passInput = icon.closest('.input-group').querySelector('input');
   if(passInput.type === 'password'){
     passInput.type = 'text'; icon.classList.replace('fa-eye','fa-eye-slash');
   }else{
     passInput.type = 'password'; icon.classList.replace('fa-eye-slash','fa-eye');
   }
+}
+
+function handleForgotPassword(e){
+  e.preventDefault();
+  showToast("Parolni tiklash uchun administratorga murojaat qiling.", 'ok');
 }
 
 function handleLogin(e){

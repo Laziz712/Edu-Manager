@@ -6,15 +6,14 @@ const { registerSiteUser, readUsers } = require('./users');
 const PORT = process.env.PORT || 3000;
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
-const ADMIN_KEY = process.env.ADMIN_KEY; // GET /api/users ni himoya qilish uchun (ixtiyoriy)
+const ADMIN_KEY = process.env.ADMIN_KEY;
 
 const app = express();
 app.use(express.json());
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
-});
 
-/* ================= TELEGRAM'GA XABAR YUBORISH (server tomonida — token xavfsiz) ================= */
+// ASOSIY QATOR: Shu bitta buyruq barcha CSS, JS va rasmlarni avtomatik ochib beradi
+app.use(express.static(__dirname));
+
 async function sendTelegramMessage(text) {
   if (!BOT_TOKEN || !CHAT_ID) {
     console.warn('⚠️ TELEGRAM_BOT_TOKEN yoki TELEGRAM_CHAT_ID .env da sozlanmagan — xabar yuborilmadi.');

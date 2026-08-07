@@ -10,9 +10,7 @@ const ADMIN_KEY = process.env.ADMIN_KEY;
 
 const app = express();
 app.use(express.json());
-
-// ASOSIY QATOR: Shu bitta buyruq barcha CSS, JS va rasmlarni avtomatik ochib beradi
-app.use(express.static(__dirname));
+app.use(express.static(path.join(__dirname, 'public')));
 
 async function sendTelegramMessage(text) {
   if (!BOT_TOKEN || !CHAT_ID) {
@@ -34,7 +32,6 @@ async function sendTelegramMessage(text) {
   }
 }
 
-/* ================= API: RO'YXATDAN O'TISH (users.json + Telegram) ================= */
 app.post('/api/register-user', async (req, res) => {
   const { name, email, phone, registeredVia } = req.body || {};
 
@@ -60,7 +57,6 @@ app.post('/api/register-user', async (req, res) => {
   res.json({ isNew, totalUsers });
 });
 
-/* ================= API: BOSHQA XABARLARNI RELAY QILISH (kurs qo'shildi/o'chdi va h.k.) ================= */
 app.post('/api/notify', async (req, res) => {
   const { text } = req.body || {};
   if (!text) return res.status(400).json({ error: 'text majburiy.' });
@@ -68,7 +64,6 @@ app.post('/api/notify', async (req, res) => {
   res.json({ sent });
 });
 
-/* ================= API: FOYDALANUVCHILAR RO'YXATI (admin uchun) ================= */
 app.get('/api/users', (req, res) => {
   if (ADMIN_KEY && req.headers['x-admin-key'] !== ADMIN_KEY) {
     return res.status(401).json({ error: "Ruxsat yo'q." });

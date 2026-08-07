@@ -16,10 +16,7 @@ function writeUsers(data) {
   fs.writeFileSync(USERS_PATH, JSON.stringify(data, null, 2));
 }
 
-/**
- * Foydalanuvchini users.json ga qo'shadi (email bo'yicha, agar hali yo'q bo'lsa).
- * Qaytaradi: { isNew, user, totalUsers }
- */
+
 function registerSiteUser({ name, email, phone, registeredVia }) {
   const data = readUsers();
   const existing = data.users.find((u) => u.email === email);

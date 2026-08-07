@@ -1,68 +1,14 @@
 {
   "users": [
     {
-      "id": "site_1785044777030",
-      "name": "Shavkatov Laziz",
-      "email": "lazizshavkatov712@gmail.com",
-      "phone": "+998 88 260 71 51",
+      "id": "site_1786005007809",
+      "name": "Arslonbek Shavkatov",
+      "email": "arslon712@gmail.com",
+      "phone": "+998 88 546 78 94",
       "source": "website",
       "registeredVia": "email",
-      "joinedAt": "2026-07-26T05:46:17.031Z"
-    },
-    {
-      "id": "site_1785045445458",
-      "name": "Sohiba Shomuratova",
-      "email": "sohibashomuratova@gmail.com",
-      "phone": "+998 88 751 71 51",
-      "source": "website",
-      "registeredVia": "email",
-      "joinedAt": "2026-07-26T05:57:25.458Z"
-    },
-    {
-      "id": "site_1785045545664",
-      "name": "Ziyodulla",
-      "email": "ziyo@gmail.com",
-      "phone": "+998 88 549 15 78",
-      "source": "website",
-      "registeredVia": "email",
-      "joinedAt": "2026-07-26T05:59:05.664Z"
-    },
-    {
-      "id": "site_1785046236582",
-      "name": "Ro'zmmatbek Sabirbaev",
-      "email": "sabirbaev@gmail.com",
-      "phone": "+998 93 457 78 95",
-      "source": "website",
-      "registeredVia": "email",
-      "joinedAt": "2026-07-26T06:10:36.582Z"
-    },
-    {
-      "id": "site_1785047863584",
-      "name": "Muratov Bunyod",
-      "email": "bunyod@gmail.com",
-      "phone": "+998 99 875 15 14",
-      "source": "website",
-      "registeredVia": "email",
-      "joinedAt": "2026-07-26T06:37:43.584Z"
-    },
-    {
-      "id": "site_1785048762172",
-      "name": "Arslon",
-      "email": "arslon@gmail.com",
-      "phone": "+998 77 879 54 15",
-      "source": "website",
-      "registeredVia": "email",
-      "joinedAt": "2026-07-26T06:52:42.172Z"
-    },
-    {
-      "id": "site_1785305844461",
-      "name": "Bunyod Abduyozov",
-      "email": "abduyozov712@gmail.com",
-      "phone": "+998 91 279 71 51",
-      "source": "website",
-      "registeredVia": "email",
-      "joinedAt": "2026-07-29T06:17:24.461Z"
+      "joinedAt": "2026-08-06T08:30:07.809Z"
     }
   ],
-  "totalUsers": 7
+  "totalUsers": 1
 }

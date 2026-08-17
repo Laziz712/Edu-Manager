@@ -5,10 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
 <title>Edu Manager — Premium Ta'lim Boshqaruv Paneli</title>
 <meta name="description" content="Ta'lim markazingiz uchun professional boshqaruv paneli — kurslar, o'qituvchilar, talabalar, baholar va davomatni bir joyda boshqaring.">
-<link rel="icon" type="" href="./img/favicon-16.png">
-<link rel="icon" type="" href="./img/favicon-32.png">
-<link rel="icon" type="" href="./img/favicon-192.png">
-<link rel="icon" type="" href="./img/favicon-512.png">
+<link rel="icon" type="image/svg+xml" href="./favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="./favicon-16.png">
+<link rel="shortcut icon" href="./favicon.ico">
+<link rel="apple-touch-icon" sizes="192x192" href="./favicon-192.png">
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#ff7a1a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Edu Manager">
 <link rel="stylesheet" href="./style.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,22 +27,42 @@
 
 <div id="toastHost"></div>
 
-<!-- ================= LOGIN ================= -->
-<div class="login-container" id="loginContainer">
-  <div class="login-wrapper">
-    <div class="login-brand show">
-      <div class="brand-tag"><i class="fas fa-bolt"></i> Premium Edition 2026</div>
-      <h1>Edu <span>Manager</span></h1>
-      <p>Ta'lim markazingiz uchun professional boshqaruv paneli. Barcha ma'lumotlaringiz avtomatik saqlanadi — brauzerni yopib qaytadan ochsangiz ham hech narsa yo'qolmaydi.</p>
-      <div class="login-features">
-        <div class="login-feature"><div class="ic"><i class="fas fa-database"></i></div><div><h4>Avtomatik saqlash</h4><p>Har bir amal darhol xotiraga yoziladi</p></div></div>
-        <div class="login-feature"><div class="ic"><i class="fas fa-shield-halved"></i></div><div><h4>Xavfsiz kirish</h4><p>Admin va talaba rollari ajratilgan</p></div></div>
-        <div class="login-feature"><div class="ic"><i class="fas fa-chart-pie"></i></div><div><h4>Jonli statistika</h4><p>Baho va davomat avtomatik hisoblanadi</p></div></div>
-        <div class="login-feature"><div class="ic"><i class="fas fa-mobile-screen"></i></div><div><h4>Har qanday qurilma</h4><p>Kompyuter, planshet va telefonda ishlaydi</p></div></div>
-      </div>
+<nav class="topnav">
+  <div class="topnav-inner">
+    <div class="topnav-logo">
+      <div class="topnav-logo-icon"><i class="fas fa-graduation-cap"></i></div>
+      <span>Edu <b>Manager</b></span>
     </div>
+    <div class="topnav-actions">
+      <button type="button" class="btn-nav btn-nav-ghost" onclick="openAuthModal('login')">Kirish</button>
+      <button type="button" class="btn-nav btn-nav-solid" onclick="openAuthModal('register')">Ro'yxatdan o'tish</button>
+    </div>
+  </div>
+</nav>
 
+<div class="login-container" id="loginContainer">
+  <div class="hero-wrapper">
+    <div class="brand-tag"><i class="fas fa-bolt"></i> Premium Edition 2026</div>
+    <h1>Edu <span>Manager</span></h1>
+    <p>Ta'lim markazingiz uchun professional boshqaruv paneli. Barcha ma'lumotlaringiz avtomatik saqlanadi — brauzerni yopib qaytadan ochsangiz ham hech narsa yo'qolmaydi.</p>
+    <div class="hero-cta">
+      <button type="button" class="btn-nav btn-nav-solid lg" onclick="openAuthModal('register')">Bepul boshlash <i class="fas fa-arrow-right"></i></button>
+      <button type="button" class="btn-nav btn-nav-ghost lg" onclick="openAuthModal('login')">Kirish</button>
+    </div>
+    <div class="login-features">
+      <div class="login-feature"><div class="ic"><i class="fas fa-database"></i></div><div><h4>Avtomatik saqlash</h4><p>Har bir amal darhol xotiraga yoziladi</p></div></div>
+      <div class="login-feature"><div class="ic"><i class="fas fa-shield-halved"></i></div><div><h4>Xavfsiz kirish</h4><p>Admin va talaba rollari ajratilgan</p></div></div>
+      <div class="login-feature"><div class="ic"><i class="fas fa-chart-pie"></i></div><div><h4>Jonli statistika</h4><p>Baho va davomat avtomatik hisoblanadi</p></div></div>
+      <div class="login-feature"><div class="ic"><i class="fas fa-mobile-screen"></i></div><div><h4>Har qanday qurilma</h4><p>Kompyuter, planshet va telefonda ishlaydi</p></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== KIRISH / RO'YXATDAN O'TISH — TO'LIQ EKRAN MODAL ===== -->
+<div class="auth-modal-overlay hidden" id="authModal">
     <div class="login-card">
+      <button type="button" class="auth-modal-close" onclick="closeAuthModal()"><i class="fas fa-xmark"></i></button>
+
       <div class="logo"><i class="fas fa-graduation-cap"></i></div>
       <div class="title">Edu Manager</div>
       <div class="subtitle">PREMIUM EDITION</div>
@@ -45,7 +72,6 @@
         <button type="button" class="tab" id="tabRegisterBtn" onclick="switchLoginTab('register')"><i class="fas fa-user-plus"></i> Ro'yxatdan o'tish</button>
       </div>
 
-      <!-- ===== KIRISH ===== -->
       <div id="loginTab">
         <div class="section-header">
           <div class="section-icon"><i class="fas fa-shield-halved"></i></div>
@@ -84,7 +110,6 @@
         </form>
       </div>
 
-      <!-- ===== RO'YXATDAN O'TISH ===== -->
       <div id="registerTab" class="hidden">
         <div class="section-header">
           <div class="section-icon"><i class="fas fa-user-plus"></i></div>
@@ -136,10 +161,8 @@
       <p class="footer-text">Edu Manager Premium bilan samarali boshqaring</p>
       <div class="divider"><i class="fas fa-star"></i></div>
     </div>
-  </div>
 </div>
 
-<!-- ================= DASHBOARD ================= -->
 <div class="dashboard-wrapper hidden" id="dashboardWrapper">
   <div class="sidebar" id="sidebar">
     <div class="sidebar-logo">
@@ -195,7 +218,6 @@
 
     <div class="page-content">
 
-      <!-- DASHBOARD -->
       <section class="page-section active" id="dashboard">
         <div class="stats-grid">
           <div class="stat-card">
@@ -233,12 +255,10 @@
         </div>
       </section>
 
-      <!-- COURSES -->
       <section class="page-section" id="courses">
         <div class="cards-grid" id="coursesGrid"></div>
       </section>
 
-      <!-- STUDENTS -->
       <section class="page-section" id="students">
         <div class="table-container">
           <div class="table-header"><h3><i class="fas fa-users"></i> Talabalar ro'yxati</h3></div>
@@ -249,12 +269,10 @@
         </div>
       </section>
 
-      <!-- INSTRUCTORS -->
       <section class="page-section" id="instructors">
         <div class="cards-grid" id="instructorsGrid"></div>
       </section>
 
-      <!-- GRADES -->
       <section class="page-section" id="grades">
         <div class="table-container">
           <div class="table-header"><h3><i class="fas fa-star"></i> Baholar jadvali</h3></div>
@@ -265,7 +283,6 @@
         </div>
       </section>
 
-      <!-- ATTENDANCE -->
       <section class="page-section" id="attendance">
         <div class="table-container">
           <div class="table-header"><h3><i class="fas fa-clipboard-list"></i> Davomat jadvali</h3></div>
@@ -276,17 +293,14 @@
         </div>
       </section>
 
-      <!-- MY COURSES (Student) -->
       <section class="page-section" id="myCourses">
         <div class="cards-grid" id="myCoursesGrid"></div>
       </section>
 
-      <!-- NEWS -->
       <section class="page-section" id="news">
         <div class="news-grid" id="newsGrid"></div>
       </section>
 
-      <!-- LESSONS SCHEDULE -->
       <section class="page-section" id="lessons">
         <div class="table-container">
           <div class="table-header"><h3><i class="fas fa-calendar-alt"></i> Darslar jadvali</h3></div>
@@ -309,9 +323,7 @@
 
 <div class="save-indicator" id="saveIndicator"><span class="dot"></span> Saqlandi</div>
 
-<!-- ================= MODALS ================= -->
 
-<!-- Course Modal -->
 <div class="modal" id="courseModal">
   <div class="modal-content">
     <div class="modal-header">
@@ -332,7 +344,6 @@
   </div>
 </div>
 
-<!-- Student Modal -->
 <div class="modal" id="studentModal">
   <div class="modal-content">
     <div class="modal-header">
@@ -357,7 +368,6 @@
   </div>
 </div>
 
-<!-- Instructor Modal -->
 <div class="modal" id="instructorModal">
   <div class="modal-content">
     <div class="modal-header">
@@ -378,7 +388,6 @@
   </div>
 </div>
 
-<!-- Grade Modal -->
 <div class="modal" id="gradeModal">
   <div class="modal-content">
     <div class="modal-header">
@@ -397,7 +406,6 @@
   </div>
 </div>
 
-<!-- Attendance Modal -->
 <div class="modal" id="attendanceModal">
   <div class="modal-content">
     <div class="modal-header">
@@ -424,7 +432,6 @@
   </div>
 </div>
 
-<!-- Enroll Modal -->
 <div class="modal" id="enrollModal">
   <div class="modal-content">
     <div class="modal-header">
@@ -453,7 +460,6 @@
   </div>
 </div>
 
-<!-- News Modal -->
 <div class="modal" id="newsModal">
   <div class="modal-content">
     <div class="modal-header">
@@ -481,7 +487,6 @@
   </div>
 </div>
 
-<!-- Lesson Modal -->
 <div class="modal" id="lessonModal">
   <div class="modal-content">
     <div class="modal-header">
@@ -511,7 +516,6 @@
   </div>
 </div>
 
-<!-- Confirm Modal -->
 <div class="modal confirm-modal" id="confirmModal">
   <div class="modal-content">
     <div class="warn-icon"><i class="fas fa-triangle-exclamation"></i></div>
@@ -524,10 +528,39 @@
   </div>
 </div>
 
-<!-- Overlay for mobile sidebar -->
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
+<!-- ===== AI YORDAMCHI ===== -->
+<button type="button" class="ai-fab" id="aiFabBtn" onclick="toggleAiChat()">
+  <i class="fas fa-robot"></i>
+</button>
+
+<div class="ai-chat-panel" id="aiChatPanel">
+  <div class="ai-chat-header">
+    <div class="ai-chat-title"><i class="fas fa-robot"></i> AI Yordamchi</div>
+    <button type="button" onclick="toggleAiChat()"><i class="fas fa-xmark"></i></button>
+  </div>
+  <div class="ai-chat-messages" id="aiChatMessages">
+    <div class="ai-msg bot">👋 Salom! Men Edu Manager AI yordamchisiman. Kurslar, ta'lim yo'nalishlari yoki saytdan foydalanish bo'yicha savolingiz bo'lsa — bemalol so'rang!</div>
+  </div>
+  <div class="ai-chat-quick" id="aiChatQuick">
+    <button type="button" onclick="sendAiQuickMessage('Qanday kurslar bor?')">Qanday kurslar bor?</button>
+    <button type="button" onclick="sendAiQuickMessage('Qanday ro\'yxatdan o\'taman?')">Ro'yxatdan o'tish</button>
+  </div>
+  <div class="ai-chat-input-row">
+    <input type="text" id="aiChatInput" placeholder="Savolingizni yozing..." onkeydown="if(event.key==='Enter'){sendAiMessage();}">
+    <button type="button" id="aiChatSendBtn" onclick="sendAiMessage()"><i class="fas fa-paper-plane"></i></button>
+  </div>
+</div>
+
 <script src="./script.js"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./service-worker.js').catch(console.error);
+    });
+  }
+</script>
 
 </body>
 </html>

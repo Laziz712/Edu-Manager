@@ -1,14 +1,16 @@
 {
   "name": "edu-manager-full",
   "version": "1.0.0",
-  "description": "Edu Manager sayti + backend (users.json va Telegram xabarlari uchun)",
+  "description": "Edu Manager sayti + backend (users.json, Telegram xabarlari va Gemini AI yordamchi uchun)",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
+    "@google/genai": "^2.17.1",
+    "dotenv": "^16.4.5",
     "express": "^4.19.2",
-    "dotenv": "^16.4.5"
+    "googleapis": "^174.0.1"
   },
   "engines": {
     "node": ">=18"

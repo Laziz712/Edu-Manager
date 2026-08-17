@@ -9,13 +9,16 @@ function readUsers() {
     fs.writeFileSync(USERS_PATH, JSON.stringify(initial, null, 2));
     return initial;
   }
-  return JSON.parse(fs.readFileSync(USERS_PATH, 'utf-8'));
+  try {
+    return JSON.parse(fs.readFileSync(USERS_PATH, 'utf-8'));
+  } catch (err) {
+    return { users: [], totalUsers: 0 };
+  }
 }
 
 function writeUsers(data) {
   fs.writeFileSync(USERS_PATH, JSON.stringify(data, null, 2));
 }
-
 
 function registerSiteUser({ name, email, phone, registeredVia }) {
   const data = readUsers();

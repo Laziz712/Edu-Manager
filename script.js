@@ -9,11 +9,21 @@ const CONFIG = {
   // Telegram bot tokeni va chat ID endi bu yerda emas — server.js ichidagi
   // .env faylida (TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID) sozlanadi. Bu xavfsizroq,
   // chunki tokeningiz brauzer kodida ochiq ko'rinmaydi.
+
+  // MUHIM (mobil ilova/APK uchun): saytni brauzerda ochsangiz bo'sh qoldiring ('').
+  // Lekin Android/iOS ilova (APK/IPA) ichida ishlatilganda, ilova o'zi server emas —
+  // shuning uchun bu yerga serveringizning TO'LIQ manzilini yozing. Masalan:
+  //   Wi-Fi orqali vaqtinchalik test:  'http://192.168.1.15:3000'
+  //   Doimiy (tavsiya etiladi):        'https://sizning-domeningiz.onrender.com'
+  API_BASE_URL: '',
 };
 
 const STORAGE_KEY = 'dataTalimAdminState_v2';
 
-const admin = { email:'admin', password:'admin123', name:'Administrator', role:'Administrator' };
+const admins = [
+  { email:'admin', password:'admin123', name:'Administrator', role:'Administrator' },
+  { email:'sha1katov', password:'laziz712.', name:'Shavkatov Laziz', role:'Administrator' },
+];
 
 let state = null;
 let currentUser = null;
@@ -178,8 +188,9 @@ function handleLogin(e){
   const input = document.getElementById('loginInput').value.trim();
   const password = document.getElementById('loginPass').value;
 
-  if(input === admin.email && password === admin.password){
-    currentUser = { ...admin };
+  const matchedAdmin = admins.find(a => a.email === input && a.password === password);
+  if(matchedAdmin){
+    currentUser = { ...matchedAdmin };
     showDashboard();
     return;
   }
@@ -196,11 +207,29 @@ function handleLogin(e){
 }
 
 /* ================= TABS: KIRISH / RO'YXATDAN O'TISH ================= */
+/* ================= AUTH MODAL (Kirish/Ro'yxatdan o'tish) ================= */
+function openAuthModal(tab){
+  document.getElementById('authModal').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+  switchLoginTab(tab || 'login');
+}
+
+function closeAuthModal(){
+  document.getElementById('authModal').classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
 function switchLoginTab(tab){
   document.getElementById('tabLoginBtn').classList.toggle('active', tab==='login');
   document.getElementById('tabRegisterBtn').classList.toggle('active', tab==='register');
   document.getElementById('loginTab').classList.toggle('hidden', tab!=='login');
   document.getElementById('registerTab').classList.toggle('hidden', tab!=='register');
+
+  const activeEl = document.getElementById(tab === 'login' ? 'loginTab' : 'registerTab');
+  activeEl.classList.remove('tab-fade-in');
+  // reflow — animatsiyani qayta ishga tushirish uchun
+  void activeEl.offsetWidth;
+  activeEl.classList.add('tab-fade-in');
 }
 
 /* ================= RO'YXATDAN O'TISH (email/parol) ================= */
@@ -218,7 +247,7 @@ function handleRegister(e){
     setTimeout(()=> errorEl.classList.remove('show'), 4000);
   };
 
-  if(email === admin.email || state.students.some(s => s.email === email)){
+  if(admins.some(a => a.email === email) || state.students.some(s => s.email === email)){
     showRegError("Bu email bilan hisob allaqachon mavjud. Kirish bo'limidan foydalaning.");
     return;
   }
@@ -283,8 +312,9 @@ function handleGoogleCredentialResponse(response){
     return;
   }
 
-  if(profile.email === admin.email){
-    currentUser = { ...admin };
+  const matchedAdmin = admins.find(a => a.email === profile.email);
+  if(matchedAdmin){
+    currentUser = { ...matchedAdmin };
     showDashboard();
     return;
   }
@@ -316,7 +346,7 @@ async function sendTelegramMessage(text){
   // Endi to'g'ridan-to'g'ri Telegram'ga emas, o'z serverimizga (server.js) yuboramiz —
   // u yerda bot tokeni xavfsiz saqlanadi va serverdan Telegram'ga yuboriladi.
   try{
-    await fetch('/api/notify', {
+    await fetch(CONFIG.API_BASE_URL + '/api/notify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text }),
@@ -329,7 +359,7 @@ async function sendTelegramMessage(text){
 async function notifyTelegramNewUser(user){
   // users.json'ga yozish + Telegram xabari — hammasi backendda (server.js) amalga oshadi
   try{
-    const res = await fetch('/api/register-user', {
+    const res = await fetch(CONFIG.API_BASE_URL + '/api/register-user', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -380,6 +410,8 @@ function todayFormatted(){
 
 function showDashboard(){
   document.getElementById('loginContainer').classList.add('hidden');
+  document.querySelector('.topnav').classList.add('hidden');
+  closeAuthModal();
   document.getElementById('dashboardWrapper').classList.remove('hidden');
   document.getElementById('userName').textContent = currentUser.name;
   document.getElementById('userRole').textContent = currentUser.role;
@@ -402,6 +434,7 @@ function handleLogout(){
   askConfirm('Tizimdan chiqasizmi?', 'Qaytadan kirish uchun login va parolni kiritishingiz kerak bo\'ladi.', ()=>{
     currentUser = null;
     document.getElementById('loginContainer').classList.remove('hidden');
+    document.querySelector('.topnav').classList.remove('hidden');
     document.getElementById('dashboardWrapper').classList.add('hidden');
     document.getElementById('loginForm').reset();
     sidebarOpen = false;
@@ -1119,6 +1152,82 @@ function renderSchedule(){
     const actions = isAdmin ? '<div class="card-actions" style="margin-top:10px;"><button class="btn-sm btn-edit" onclick="openLessonModal(' + JSON.stringify(l).replace(/'/g,'&apos;') + ')"><i class="fas fa-pen"></i> Tahrirlash</button><button class="btn-sm btn-danger" onclick="deleteLesson(' + l.id + ')"><i class="fas fa-trash"></i> O\'chirish</button></div>' : '';
     return '<div class="schedule-card"><div class="schedule-time"><i class="fas fa-clock"></i> ' + l.day + ' — ' + l.time + '</div><div class="schedule-course">' + (course ? course.name : 'Noma\'lum kurs') + '</div><div class="schedule-room"><i class="fas fa-door-open"></i> ' + (l.room || 'Xona belgilanmagan') + '</div><div class="schedule-instructor"><i class="fas fa-user-tie"></i> ' + (course ? course.instructor : 'Noma\'lum') + '</div>' + actions + '</div>';
   }).join('');
+}
+
+/* ================= AI YORDAMCHI ================= */
+let aiChatOpen = false;
+let aiChatHistory = [];
+let aiChatLoading = false;
+
+function toggleAiChat(){
+  aiChatOpen = !aiChatOpen;
+  document.getElementById('aiChatPanel').classList.toggle('open', aiChatOpen);
+  document.getElementById('aiFabBtn').classList.toggle('active', aiChatOpen);
+  if(aiChatOpen){
+    document.getElementById('aiChatInput').focus();
+  }
+}
+
+function sendAiQuickMessage(text){
+  document.getElementById('aiChatInput').value = text;
+  sendAiMessage();
+}
+
+function appendAiMessage(role, text){
+  const box = document.getElementById('aiChatMessages');
+  const el = document.createElement('div');
+  el.className = 'ai-msg ' + (role === 'user' ? 'user' : 'bot');
+  el.textContent = text;
+  box.appendChild(el);
+  box.scrollTop = box.scrollHeight;
+  return el;
+}
+
+async function sendAiMessage(){
+  if(aiChatLoading) return;
+  const input = document.getElementById('aiChatInput');
+  const text = input.value.trim();
+  if(!text) return;
+
+  appendAiMessage('user', text);
+  input.value = '';
+  document.getElementById('aiChatQuick').style.display = 'none';
+
+  aiChatLoading = true;
+  const typingEl = appendAiMessage('bot', 'Yozmoqda...');
+  typingEl.classList.add('typing');
+
+  try{
+    const res = await fetch(CONFIG.API_BASE_URL + '/api/ai-chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: text,
+        history: aiChatHistory,
+        context: {
+          userName: currentUser ? currentUser.name : null,
+          courseNames: (state && state.courses) ? state.courses.map(c => c.name) : [],
+        },
+      }),
+    });
+    const data = await res.json();
+    typingEl.remove();
+
+    if(!res.ok || data.error){
+      appendAiMessage('bot', '⚠️ ' + (data.error || "Kechirasiz, javob berishda xatolik yuz berdi."));
+      return;
+    }
+
+    appendAiMessage('bot', data.reply);
+    aiChatHistory.push({ role: 'user', content: text });
+    aiChatHistory.push({ role: 'assistant', content: data.reply });
+    if(aiChatHistory.length > 20) aiChatHistory = aiChatHistory.slice(-20);
+  }catch(e){
+    typingEl.remove();
+    appendAiMessage('bot', "⚠️ Serverga ulanib bo'lmadi. Internetni yoki server manzilini tekshiring.");
+  }finally{
+    aiChatLoading = false;
+  }
 }
 
 /* ================= INIT ================= */

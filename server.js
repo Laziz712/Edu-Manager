@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const { registerSiteUser, readUsers } = require('./users');
+const { askAI } = require('./ai');
 
 const PORT = process.env.PORT || 3000;
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
@@ -69,6 +70,23 @@ app.get('/api/users', (req, res) => {
     return res.status(401).json({ error: "Ruxsat yo'q." });
   }
   res.json(readUsers());
+});
+
+app.post('/api/ai-chat', async (req, res) => {
+  try {
+    const { message, history, context } = req.body || {};
+    const result = await askAI({ message, history, context });
+
+    if (result.error) {
+      const status = /sozlanmagan/.test(result.error) ? 503 : 502;
+      return res.status(status).json({ error: result.error });
+    }
+
+    res.json({ reply: result.reply });
+  } catch (error) {
+    console.error('AI API Route Error:', error);
+    res.status(500).json({ error: 'Serverda kutilmagan xatolik yuz berdi.' });
+  }
 });
 
 app.listen(PORT, () => {
